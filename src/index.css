@@ -1,60 +1,55 @@
 @import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Google Fonts */
+.font-outfit {
+  font-family: "Outfit", sans-serif;
 }
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  background-color: #000000;
+.font-balsamiq {
+  font-family: "Balsamiq Sans", cursive;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #ffffff;
+.font-luckiest {
+  font-family: "Luckiest Guy", cursive;
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  @apply w-2;
 }
 
 ::-webkit-scrollbar-track {
-  background: #000000;
+  @apply bg-black;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 4px;
+  @apply bg-[#333] rounded;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #444444;
+  @apply bg-[#444];
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+html,
+body {
+  @apply bg-black text-white h-full w-full;
+  font-family: "Outfit", sans-serif;
+}
+
+/* Light sweep animation for footer gradient bar */
+@keyframes light-sweep {
+  0% {
+    left: -384px;
+  }
+
+  80% {
+    left: 100%;
+  }
+
+  100% {
+    left: 100%;
   }
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.animate-light-sweep {
+  animation: light-sweep 10s linear infinite;
 }

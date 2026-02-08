@@ -1,306 +1,69 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Wand2, RefreshCw, Sparkles, Edit3, Save, X, Pencil } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import {
+    Send,
+    Wand2,
+    RefreshCw,
+    Sparkles,
+    Edit3,
+    Save,
+    X,
+    Pencil,
+} from "lucide-react";
 
-const styles = {
-    container: {
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        backgroundColor: '#000000',
-        height: '100%',
-    },
-    scrollArea: {
-        flex: 1,
-        overflowY: 'auto',
-    },
-    notificationContainer: {
-        maxWidth: '768px',
-        margin: '0 auto',
-        padding: '16px',
-    },
-    errorBox: {
-        padding: '12px 16px',
-        backgroundColor: 'rgba(220, 38, 38, 0.15)',
-        border: '1px solid rgba(220, 38, 38, 0.4)',
-        borderRadius: '8px',
-        color: '#ef4444',
-        fontSize: '14px',
-        marginBottom: '12px',
-    },
-    successBox: {
-        padding: '12px 16px',
-        backgroundColor: 'rgba(34, 197, 94, 0.15)',
-        border: '1px solid rgba(34, 197, 94, 0.4)',
-        borderRadius: '8px',
-        color: '#22c55e',
-        fontSize: '14px',
-        marginBottom: '12px',
-    },
-    welcomeContainer: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        padding: '24px',
-    },
-    welcomeInner: {
-        maxWidth: '600px',
-        width: '100%',
-        textAlign: 'center',
-    },
-    iconCircle: {
-        width: '64px',
-        height: '64px',
-        margin: '0 auto 24px',
-        borderRadius: '50%',
-        backgroundColor: '#1a1a1a',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    title: {
-        fontSize: '28px',
-        fontWeight: '600',
-        color: '#ffffff',
-        marginBottom: '8px',
-    },
-    subtitle: {
-        color: '#666666',
-        marginBottom: '32px',
-    },
-    genreLabel: {
-        fontSize: '14px',
-        color: '#888888',
-        marginBottom: '12px',
-    },
-    genreContainer: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: '8px',
-    },
-    genreButton: (isSelected) => ({
-        padding: '10px 20px',
-        borderRadius: '20px',
-        fontSize: '14px',
-        fontWeight: '500',
-        cursor: 'pointer',
-        border: 'none',
-        backgroundColor: isSelected ? '#ffffff' : '#1a1a1a',
-        color: isSelected ? '#000000' : '#cccccc',
-    }),
-    loadingContainer: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-    },
-    loadingInner: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '16px',
-    },
-    spinner: {
-        width: '48px',
-        height: '48px',
-        border: '4px solid #222222',
-        borderTopColor: '#ffffff',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-    },
-    loadingText: {
-        color: '#888888',
-    },
-    storyContent: {
-        paddingBottom: '120px',
-    },
-    messageRowUser: {
-        padding: '24px 0',
-        backgroundColor: '#000000',
-    },
-    messageRowAI: {
-        padding: '24px 0',
-        backgroundColor: '#0a0a0a',
-    },
-    messageInner: {
-        maxWidth: '768px',
-        margin: '0 auto',
-        padding: '0 24px',
-        display: 'flex',
-        gap: '16px',
-    },
-    avatarUser: {
-        width: '32px',
-        height: '32px',
-        borderRadius: '4px',
-        backgroundColor: '#333333',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        color: '#ffffff',
-        fontSize: '14px',
-        fontWeight: '600',
-    },
-    avatarAI: {
-        width: '32px',
-        height: '32px',
-        borderRadius: '4px',
-        backgroundColor: '#1a1a1a',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-    },
-    messageContent: {
-        flex: 1,
-    },
-    storyText: {
-        color: '#e0e0e0',
-        fontSize: '15px',
-        lineHeight: '1.8',
-        whiteSpace: 'pre-wrap',
-    },
-    hintText: {
-        fontSize: '11px',
-        color: '#666666',
-        marginTop: '12px',
-        fontStyle: 'italic',
-    },
-    actionContainer: {
-        padding: '16px 0',
-        backgroundColor: '#000000',
-    },
-    actionInner: {
-        maxWidth: '768px',
-        margin: '0 auto',
-        padding: '0 24px',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '8px',
-    },
-    secondaryButton: (disabled) => ({
-        padding: '8px 16px',
-        backgroundColor: '#1a1a1a',
-        border: '1px solid #333333',
-        borderRadius: '8px',
-        color: '#cccccc',
-        fontSize: '13px',
-        fontWeight: '500',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-    }),
-    primaryButton: (disabled) => ({
-        padding: '8px 16px',
-        backgroundColor: '#ffffff',
-        border: 'none',
-        borderRadius: '8px',
-        color: '#000000',
-        fontSize: '13px',
-        fontWeight: '500',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        opacity: disabled ? 0.5 : 1,
-    }),
-    inputSection: {
-        borderTop: '1px solid #222222',
-        backgroundColor: '#000000',
-        padding: '20px',
-    },
-    inputContainer: {
-        maxWidth: '768px',
-        margin: '0 auto',
-    },
-    refineRow: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        marginBottom: '12px',
-    },
-    inputField: {
-        flex: 1,
-        padding: '12px 16px',
-        backgroundColor: '#1a1a1a',
-        border: '1px solid #333333',
-        borderRadius: '8px',
-        fontSize: '14px',
-        color: '#ffffff',
-        outline: 'none',
-    },
-    refineButton: (disabled) => ({
-        padding: '12px 20px',
-        backgroundColor: '#333333',
-        border: 'none',
-        borderRadius: '8px',
-        color: '#ffffff',
-        fontSize: '14px',
-        fontWeight: '500',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-    }),
-    mainInputRow: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-    },
-    mainInput: {
-        flex: 1,
-        padding: '16px 20px',
-        backgroundColor: '#1a1a1a',
-        border: '1px solid #333333',
-        borderRadius: '12px',
-        fontSize: '15px',
-        color: '#ffffff',
-        outline: 'none',
-    },
-    sendButton: (disabled) => ({
-        padding: '16px 24px',
-        backgroundColor: '#ffffff',
-        border: 'none',
-        borderRadius: '12px',
-        color: '#000000',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: disabled ? 0.5 : 1,
-    }),
-    genrePills: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '8px',
-        marginTop: '12px',
-    },
-    genrePill: (isSelected) => ({
-        padding: '6px 14px',
-        borderRadius: '16px',
-        fontSize: '12px',
-        border: 'none',
-        cursor: 'pointer',
-        backgroundColor: isSelected ? '#ffffff' : '#1a1a1a',
-        color: isSelected ? '#000000' : '#888888',
-    }),
-};
-
-function MessageBlock({ message, index, isRefining, onRefine, onEditMessage }) {
+function MessageBlock({
+    message,
+    index,
+    isRefining,
+    onRefine,
+    onEditMessage,
+    isNew = false, // Only animate if this is a newly generated message
+}) {
     const [showRefine, setShowRefine] = useState(false);
-    const [refinePrompt, setRefinePrompt] = useState('');
+    const [refinePrompt, setRefinePrompt] = useState("");
     const [isEditing, setIsEditing] = useState(false);
-    const [editContent, setEditContent] = useState('');
+    const [editContent, setEditContent] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const textareaRef = useRef(null);
+
+    // Typing animation state - only if isNew
+    const [displayedText, setDisplayedText] = useState(isNew ? "" : message.ai_response);
+    const [isTyping, setIsTyping] = useState(isNew);
+
+    // Typing animation effect - only for new messages
+    useEffect(() => {
+        if (!message.ai_response || isEditing || isRefining) return;
+
+        // If not a new message, show full text immediately
+        if (!isNew) {
+            setDisplayedText(message.ai_response);
+            setIsTyping(false);
+            return;
+        }
+
+        const text = message.ai_response;
+        let currentIndex = 0;
+        setDisplayedText("");
+        setIsTyping(true);
+
+        const typingInterval = setInterval(() => {
+            if (currentIndex < text.length) {
+                // Type 3-5 characters at a time for faster effect
+                const charsToAdd = Math.min(3, text.length - currentIndex);
+                setDisplayedText(text.substring(0, currentIndex + charsToAdd));
+                currentIndex += charsToAdd;
+            } else {
+                clearInterval(typingInterval);
+                setIsTyping(false);
+            }
+        }, 10);
+
+        return () => clearInterval(typingInterval);
+    }, [message.ai_response, message.id, isNew]);
 
     const handleRefine = () => {
         if (refinePrompt.trim()) {
             onRefine(message.id, refinePrompt);
-            setRefinePrompt('');
+            setRefinePrompt("");
             setShowRefine(false);
         }
     };
@@ -310,16 +73,16 @@ function MessageBlock({ message, index, isRefining, onRefine, onEditMessage }) {
         setIsEditing(true);
     };
 
-    // Auto-resize textarea to fit content
     useEffect(() => {
         if (isEditing && textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height =
+                textareaRef.current.scrollHeight + "px";
         }
     }, [isEditing, editContent]);
 
     const handleSaveEdit = async () => {
-        if (editContent.trim() && onEditMessage) {
+        if (editContent.trim()) {
             setIsSaving(true);
             await onEditMessage(message.id, editContent.trim());
             setIsSaving(false);
@@ -329,171 +92,157 @@ function MessageBlock({ message, index, isRefining, onRefine, onEditMessage }) {
 
     const handleCancelEdit = () => {
         setIsEditing(false);
-        setEditContent('');
+        setEditContent("");
     };
 
     return (
         <>
-            {/* User Prompt */}
-            <div style={styles.messageRowUser}>
-                <div style={styles.messageInner}>
-                    <div style={styles.avatarUser}>U</div>
-                    <div style={styles.messageContent}>
-                        <p style={{ color: '#ffffff', fontWeight: '500', marginBottom: '4px' }}>Your Prompt</p>
-                        <p style={{ color: '#cccccc' }}>{message.user_prompt}</p>
+            {/* USER PROMPT - Right aligned */}
+            <div className="py-4 bg-black">
+                <div className="max-w-3xl mx-auto px-6 flex justify-end">
+                    <div className="flex items-start gap-3 max-w-[80%]">
+                        <div className="flex-1 text-right">
+                            <p className="text-gray-300 bg-[#1a1a1a] px-4 py-3 rounded-2xl rounded-tr-sm inline-block text-left">
+                                {message.user_prompt}
+                            </p>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                            U
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* AI Response */}
-            <div style={styles.messageRowAI}>
-                <div style={styles.messageInner}>
-                    <div style={styles.avatarAI}>
-                        <Wand2 size={16} color="#ffffff" />
-                    </div>
-                    <div style={{ ...styles.messageContent, position: 'relative' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <p style={{ fontSize: '12px', color: '#888888', fontWeight: '600' }}>
-                                Part {index + 1}
-                            </p>
-                            {!isEditing && !isRefining && (
-                                <button
-                                    onClick={handleStartEdit}
-                                    style={{
-                                        padding: '4px 8px',
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid #333333',
-                                        borderRadius: '4px',
-                                        color: '#888888',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        fontSize: '11px'
-                                    }}
-                                    title="Edit this response"
-                                >
-                                    <Pencil size={12} />
-                                    Edit
-                                </button>
+            {/* AI RESPONSE - Left aligned */}
+            <div className="py-4 bg-black">
+                <div className="max-w-3xl mx-auto px-6">
+                    <div className="flex items-start gap-3 max-w-[85%]">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shrink-0">
+                            <Wand2 size={14} color="#fff" />
+                        </div>
+
+                        <div className="flex-1">
+                            {/* Refining State */}
+                            {isRefining && (
+                                <div className="flex items-center gap-2 text-gray-400 bg-[#1a1a1a] px-4 py-3 rounded-2xl rounded-tl-sm">
+                                    <RefreshCw size={16} className="animate-spin" />
+                                    Refining this part...
+                                </div>
+                            )}
+
+                            {/* Edit Mode */}
+                            {!isRefining && isEditing && (
+                                <div className="flex flex-col gap-3">
+                                    <textarea
+                                        ref={textareaRef}
+                                        value={editContent}
+                                        onChange={(e) =>
+                                            setEditContent(e.target.value)
+                                        }
+                                        className="w-full min-h-[200px] p-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-gray-200 text-[15px] leading-relaxed resize-none outline-none"
+                                    />
+
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            onClick={handleCancelEdit}
+                                            className="px-4 py-2 border border-[#333] rounded-md text-gray-400 flex items-center gap-1"
+                                        >
+                                            <X size={14} />
+                                            Cancel
+                                        </button>
+
+                                        <button
+                                            onClick={handleSaveEdit}
+                                            disabled={isSaving || !editContent}
+                                            className="px-4 py-2 rounded-md flex items-center gap-1 bg-green-500 text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                                        >
+                                            {isSaving ? (
+                                                <RefreshCw
+                                                    size={14}
+                                                    className="animate-spin"
+                                                />
+                                            ) : (
+                                                <Save size={14} />
+                                            )}
+                                            Save
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Normal AI Response with typing effect */}
+                            {!isRefining && !isEditing && (
+                                <div className="bg-[#1a1a1a] px-4 py-3 rounded-2xl rounded-tl-sm">
+                                    <p className="text-gray-200 text-[15px] leading-relaxed whitespace-pre-wrap">
+                                        {displayedText}
+                                        {isTyping && <span className="inline-block w-0.5 h-4 bg-blue-400 ml-0.5 animate-pulse" />}
+                                    </p>
+
+                                    {!isTyping && message.hint_context && (
+                                        <p className="text-[11px] text-gray-500 italic mt-3">
+                                            Context: {message.hint_context}
+                                        </p>
+                                    )}
+
+                                    {/* Edit button */}
+                                    {!isTyping && (
+                                        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-[#333]">
+                                            <button
+                                                onClick={handleStartEdit}
+                                                className="px-2 py-1 text-[11px] text-gray-400 hover:text-gray-300 flex items-center gap-1"
+                                            >
+                                                <Pencil size={12} />
+                                                Edit
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
-                        {isRefining ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#888888' }}>
-                                <RefreshCw size={16} className="animate-spin" />
-                                Refining this part...
-                            </div>
-                        ) : isEditing ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <textarea
-                                    ref={textareaRef}
-                                    value={editContent}
-                                    onChange={(e) => setEditContent(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        minHeight: '200px',
-                                        padding: '12px',
-                                        backgroundColor: '#1a1a1a',
-                                        border: '1px solid #444444',
-                                        borderRadius: '8px',
-                                        color: '#e0e0e0',
-                                        fontSize: '15px',
-                                        lineHeight: '1.8',
-                                        resize: 'none',
-                                        outline: 'none',
-                                        fontFamily: 'inherit',
-                                        overflow: 'hidden'
-                                    }}
-                                    autoFocus
-                                />
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                                    <button
-                                        onClick={handleCancelEdit}
-                                        style={{
-                                            padding: '8px 16px',
-                                            backgroundColor: 'transparent',
-                                            border: '1px solid #333333',
-                                            borderRadius: '6px',
-                                            color: '#888888',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '6px',
-                                            fontSize: '13px'
-                                        }}
-                                    >
-                                        <X size={14} />
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSaveEdit}
-                                        disabled={isSaving || !editContent.trim()}
-                                        style={{
-                                            padding: '8px 16px',
-                                            backgroundColor: '#22c55e',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            color: '#ffffff',
-                                            cursor: isSaving ? 'not-allowed' : 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '6px',
-                                            fontSize: '13px',
-                                            opacity: isSaving ? 0.7 : 1
-                                        }}
-                                    >
-                                        {isSaving ? (
-                                            <RefreshCw size={14} className="animate-spin" />
-                                        ) : (
-                                            <Save size={14} />
-                                        )}
-                                        Save
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <p style={styles.storyText}>{message.ai_response}</p>
-                                {message.hint_context && (
-                                    <p style={styles.hintText}>Context: {message.hint_context}</p>
-                                )}
-                            </>
-                        )}
                     </div>
                 </div>
 
-                {/* Refine Button for this message */}
+                {/* Refine Area */}
                 {!isRefining && !isEditing && (
-                    <div style={styles.actionInner}>
+                    <div className="max-w-3xl mx-auto px-6 mt-3 flex flex-wrap gap-2">
                         {!showRefine ? (
                             <button
                                 onClick={() => setShowRefine(true)}
-                                style={styles.secondaryButton(false)}
+                                className="px-4 py-2 bg-[#1a1a1a] border border-[#333] rounded-lg text-gray-300 text-sm flex items-center gap-2"
                             >
                                 <Edit3 size={14} />
                                 Refine This Part
                             </button>
                         ) : (
-                            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                            <div className="flex gap-2 w-full">
                                 <input
                                     type="text"
                                     value={refinePrompt}
-                                    onChange={(e) => setRefinePrompt(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleRefine()}
+                                    onChange={(e) =>
+                                        setRefinePrompt(e.target.value)
+                                    }
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter" && handleRefine()
+                                    }
+                                    className="flex-1 px-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-lg text-gray-200 text-sm outline-none"
                                     placeholder="How should this part be refined?"
-                                    style={styles.inputField}
                                     autoFocus
                                 />
+
                                 <button
                                     onClick={handleRefine}
                                     disabled={!refinePrompt.trim()}
-                                    style={styles.refineButton(!refinePrompt.trim())}
+                                    className="px-4 py-3 rounded-lg bg-[#333] text-white text-sm disabled:opacity-50"
                                 >
                                     Refine
                                 </button>
+
                                 <button
-                                    onClick={() => { setShowRefine(false); setRefinePrompt(''); }}
-                                    style={styles.secondaryButton(false)}
+                                    onClick={() => {
+                                        setShowRefine(false);
+                                        setRefinePrompt("");
+                                    }}
+                                    className="px-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-lg text-gray-300 text-sm"
                                 >
                                     Cancel
                                 </button>
@@ -506,6 +255,9 @@ function MessageBlock({ message, index, isRefining, onRefine, onEditMessage }) {
     );
 }
 
+/* ---------------------------------------------
+   MAIN CHATAREA COMPONENT (TAILWIND VERSION)
+--------------------------------------------- */
 export default function ChatArea({
     messages,
     selectedStory,
@@ -521,15 +273,17 @@ export default function ChatArea({
     onRefine,
     onEditMessage,
     hasMessages,
+    newMessageId, // ID of newly generated message that should animate
 }) {
     const scrollRef = useRef(null);
+
     const genres = [
-        { id: 'fantasy', name: 'Fantasy' },
-        { id: 'scifi', name: 'Sci-Fi' },
-        { id: 'horror', name: 'Horror' },
-        { id: 'romance', name: 'Romance' },
-        { id: 'mystery', name: 'Mystery' },
-        { id: 'adventure', name: 'Adventure' },
+        { id: "fantasy", name: "Fantasy" },
+        { id: "scifi", name: "Sci-Fi" },
+        { id: "horror", name: "Horror" },
+        { id: "romance", name: "Romance" },
+        { id: "mystery", name: "Mystery" },
+        { id: "adventure", name: "Adventure" },
     ];
 
     useEffect(() => {
@@ -539,60 +293,78 @@ export default function ChatArea({
     }, [messages, loading]);
 
     const handleSubmit = () => {
-        if (hasMessages) {
-            onContinue();
-        } else {
-            onSend();
-        }
+        if (hasMessages) onContinue();
+        else onSend();
     };
 
     return (
-        <div style={styles.container}>
-            <div style={styles.scrollArea} ref={scrollRef}>
+        <div className="flex flex-col flex-1 bg-black h-full">
+            {/* SCROLL AREA */}
+            <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+                {/* ERROR */}
                 {error && (
-                    <div style={styles.notificationContainer}>
-                        <div style={styles.errorBox}>{error}</div>
+                    <div className="max-w-3xl mx-auto px-6 py-4">
+                        <div className="p-3 border border-red-600/40 bg-red-600/10 rounded-lg text-red-400 text-sm">
+                            {error}
+                        </div>
                     </div>
                 )}
 
+                {/* WELCOME */}
                 {!hasMessages && !loading && (
-                    <div style={styles.welcomeContainer}>
-                        <div style={styles.welcomeInner}>
-                            <div style={styles.iconCircle}>
-                                <Sparkles size={28} color="#ffffff" />
+                    <div className="flex items-center justify-center h-full p-6">
+                        <div className="max-w-xl text-center">
+                            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#1a1a1a] flex items-center justify-center">
+                                <Sparkles size={28} color="#fff" />
                             </div>
-                            <h1 style={styles.title}>AI Storyteller</h1>
-                            <p style={styles.subtitle}>Create amazing stories with the power of AI</p>
 
-                            <div style={{ marginBottom: '24px' }}>
-                                <p style={styles.genreLabel}>Choose a genre</p>
-                                <div style={styles.genreContainer}>
-                                    {genres.map((g) => (
-                                        <button
-                                            key={g.id}
-                                            onClick={() => setGenre(g.id)}
-                                            style={styles.genreButton(genre === g.id)}
-                                        >
-                                            {g.name}
-                                        </button>
-                                    ))}
-                                </div>
+                            <h1 className="text-3xl font-semibold text-white mb-2">
+                                AI Storyteller
+                            </h1>
+
+                            <p className="text-gray-500 mb-8">
+                                Create amazing stories with the power of AI
+                            </p>
+
+                            <p className="text-sm text-gray-400 mb-3">
+                                Choose a genre
+                            </p>
+
+                            {/* GENRE SELECT */}
+                            <div className="flex flex-wrap justify-center gap-3">
+                                {genres.map((g) => (
+                                    <button
+                                        key={g.id}
+                                        onClick={() => setGenre(g.id)}
+                                        className={`
+                                            px-4 py-2 rounded-full text-sm font-medium
+                                            ${genre === g.id
+                                                ? "bg-white text-black"
+                                                : "bg-[#1a1a1a] text-gray-300"
+                                            }
+                                        `}
+                                    >
+                                        {g.name}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>
                 )}
 
+                {/* GENERATING */}
                 {loading && !hasMessages && (
-                    <div style={styles.loadingContainer}>
-                        <div style={styles.loadingInner}>
-                            <div style={styles.spinner} />
-                            <p style={styles.loadingText}>Crafting your story...</p>
+                    <div className="flex items-center justify-center h-full">
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="w-12 h-12 border-4 border-[#222] border-t-white rounded-full animate-spin" />
+                            <p className="text-gray-500">Crafting your story...</p>
                         </div>
                     </div>
                 )}
 
+                {/* STORY CONTENT */}
                 {hasMessages && (
-                    <div style={styles.storyContent}>
+                    <div className="pb-32">
                         {messages.map((msg, index) => (
                             <MessageBlock
                                 key={msg.id}
@@ -601,18 +373,22 @@ export default function ChatArea({
                                 isRefining={refiningId === msg.id}
                                 onRefine={onRefine}
                                 onEditMessage={onEditMessage}
+                                isNew={msg.id === newMessageId}
                             />
                         ))}
 
                         {loading && (
-                            <div style={styles.messageRowAI}>
-                                <div style={styles.messageInner}>
-                                    <div style={styles.avatarAI}>
-                                        <Wand2 size={16} color="#ffffff" />
+                            <div className="py-6 bg-[#0a0a0a]">
+                                <div className="max-w-3xl mx-auto px-6 flex gap-4 items-center text-gray-400">
+                                    <div className="w-8 h-8 rounded-md bg-[#1a1a1a] flex items-center justify-center">
+                                        <Wand2 size={16} color="#fff" />
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#888888' }}>
-                                        <RefreshCw size={16} className="animate-spin" />
-                                        {hasMessages ? 'Continuing your story...' : 'Generating...'}
+                                    <div className="flex items-center gap-2">
+                                        <RefreshCw
+                                            size={16}
+                                            className="animate-spin"
+                                        />
+                                        Continuing your story...
                                     </div>
                                 </div>
                             </div>
@@ -621,30 +397,60 @@ export default function ChatArea({
                 )}
             </div>
 
-            <div style={styles.inputSection}>
-                <div style={styles.inputContainer}>
-                    <div style={styles.mainInputRow}>
+            {/* INPUT SECTION */}
+            <div className="border-t border-[#222] bg-black p-5">
+                <div className="max-w-3xl mx-auto">
+                    <div className="flex items-center gap-3">
                         <input
                             type="text"
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && !loading && inputText.trim() && handleSubmit()}
-                            placeholder={hasMessages ? "What happens next in the story?" : "Describe your story idea..."}
-                            style={styles.mainInput}
+                            onKeyDown={(e) =>
+                                e.key === "Enter" &&
+                                inputText.trim() &&
+                                !loading &&
+                                handleSubmit()
+                            }
+                            placeholder={
+                                hasMessages
+                                    ? "What happens next in the story?"
+                                    : "Describe your story idea..."
+                            }
+                            className="flex-1 px-5 py-4 bg-[#1a1a1a] border border-[#333] rounded-xl text-white text-[15px] outline-none"
                         />
+
                         <button
                             onClick={handleSubmit}
-                            disabled={loading || !inputText?.trim()}
-                            style={styles.sendButton(loading || !inputText?.trim())}
+                            disabled={loading || !inputText.trim()}
+                            className="
+                                px-6 py-4 rounded-xl bg-white text-black
+                                disabled:opacity-50 disabled:cursor-not-allowed
+                                flex items-center justify-center
+                            "
                         >
-                            {loading ? <RefreshCw size={20} className="animate-spin" /> : <Send size={20} />}
+                            {loading ? (
+                                <RefreshCw size={20} className="animate-spin" />
+                            ) : (
+                                <Send size={20} />
+                            )}
                         </button>
                     </div>
 
+                    {/* LOWER GENRE PILLS (ONLY BEFORE FIRST MESSAGE) */}
                     {!hasMessages && (
-                        <div style={styles.genrePills}>
+                        <div className="flex flex-wrap gap-2 mt-3">
                             {genres.map((g) => (
-                                <button key={g.id} onClick={() => setGenre(g.id)} style={styles.genrePill(genre === g.id)}>
+                                <button
+                                    key={g.id}
+                                    onClick={() => setGenre(g.id)}
+                                    className={`
+                                        px-3 py-1.5 text-xs rounded-full
+                                        ${genre === g.id
+                                            ? "bg-white text-black"
+                                            : "bg-[#1a1a1a] text-gray-400"
+                                        }
+                                    `}
+                                >
                                     {g.name}
                                 </button>
                             ))}
@@ -652,15 +458,6 @@ export default function ChatArea({
                     )}
                 </div>
             </div>
-
-            <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
         </div>
     );
 }
