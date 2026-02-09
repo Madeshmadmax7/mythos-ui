@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Send, MessageCircle } from "lucide-react";
 import mythos from "/logo/mythos-2.png";
-
+import crocwalk from '../image/crocwalk.png';
 export default function Footer() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function Footer() {
         <footer className="relative z-10 bg-[#0a0a1a]">
             {/* Main Content Box */}
             <div className="max-w-6xl mx-auto px-6 py-8">
-                <div className="rounded-2xl border border-white/10 bg-[#0f0f1a] p-8">
+                <div className="rounded-2xl border border-white/10 bg-[#0f0f1a] p-8 pb-0 relative overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         {/* Logo & Social */}
                         <div className="space-y-6">
@@ -74,10 +74,16 @@ export default function Footer() {
                             </div>
                         </div>
                     </div>
+
+                    <div className="flex justify-end mt-4">
+                        <img
+                            src={crocwalk}
+                            alt="Croc"
+                            className="h-32 object-contain"
+                        />
+                    </div>
                 </div>
             </div>
-
-            {/* Questions Section - Same Color */}
             <div className="bg-[#0a0a1a]">
                 <div className="max-w-6xl mx-auto px-6 py-10">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">

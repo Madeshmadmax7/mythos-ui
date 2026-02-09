@@ -38,6 +38,10 @@ function App() {
   const [error, setError] = useState("");
   const [newMessageId, setNewMessageId] = useState(null); // Track newly generated message for typing animation
 
+  // Reactions and reviews state
+  const [reactions, setReactions] = useState({}); // { [messageId]: { type, likes, dislikes } }
+  const [reviews, setReviews] = useState({}); // { [messageId]: [reviews] }
+
   // Check for existing token on mount
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -138,7 +142,12 @@ function App() {
         },
       });
       if (res.ok) {
-        setMessages(await res.json());
+        const msgs = await res.json();
+        setMessages(msgs);
+        // Fetch reactions and reviews for all loaded messages
+        if (msgs.length > 0) {
+          fetchReactionsAndReviews(msgs.map((m) => m.id));
+        }
       } else if (res.status === 401) {
         handleLogout();
       }
@@ -387,6 +396,126 @@ function App() {
     }
   };
 
+  // ==================== Reaction & Review Handlers ====================
+
+  const handleReaction = async (messageId, reactionType) => {
+    try {
+      const res = await fetch(`${API_BASE}/messages/${messageId}/reaction`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reaction_type: reactionType }),
+      });
+
+      if (!res.ok) throw new Error("Failed to set reaction");
+
+      const result = await res.json();
+
+      setReactions((prev) => ({
+        ...prev,
+        [messageId]: {
+          type: result.reaction_type,
+          likes: result.likes,
+          dislikes: result.dislikes,
+        },
+      }));
+    } catch (err) {
+      console.error("Reaction error:", err);
+    }
+  };
+
+  const handleAddReview = async (messageId, comment) => {
+    try {
+      const res = await fetch(`${API_BASE}/messages/${messageId}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ comment }),
+      });
+
+      if (!res.ok) throw new Error("Failed to add review");
+
+      const newReview = await res.json();
+
+      setReviews((prev) => ({
+        ...prev,
+        [messageId]: [...(prev[messageId] || []), newReview],
+      }));
+    } catch (err) {
+      console.error("Add review error:", err);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId, messageId) => {
+    try {
+      const res = await fetch(`${API_BASE}/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete review");
+
+      setReviews((prev) => ({
+        ...prev,
+        [messageId]: (prev[messageId] || []).filter((r) => r.id !== reviewId),
+      }));
+    } catch (err) {
+      console.error("Delete review error:", err);
+    }
+  };
+
+  // Fetch reactions and reviews when messages load
+  const fetchReactionsAndReviews = async (messageIds) => {
+    if (!token || messageIds.length === 0) return;
+
+    try {
+      // Fetch reactions and reviews for all messages
+      const reactionsData = {};
+      const reviewsData = {};
+
+      await Promise.all(
+        messageIds.map(async (messageId) => {
+          try {
+            const [reactionRes, reviewsRes] = await Promise.all([
+              fetch(`${API_BASE}/messages/${messageId}/reaction`, {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              fetch(`${API_BASE}/messages/${messageId}/reviews`, {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+            ]);
+
+            if (reactionRes.ok) {
+              const reaction = await reactionRes.json();
+              reactionsData[messageId] = {
+                type: reaction.reaction_type,
+                likes: reaction.likes,
+                dislikes: reaction.dislikes,
+              };
+            }
+
+            if (reviewsRes.ok) {
+              reviewsData[messageId] = await reviewsRes.json();
+            }
+          } catch (err) {
+            console.error(`Error fetching data for message ${messageId}:`, err);
+          }
+        })
+      );
+
+      setReactions((prev) => ({ ...prev, ...reactionsData }));
+      setReviews((prev) => ({ ...prev, ...reviewsData }));
+    } catch (err) {
+      console.error("Error fetching reactions/reviews:", err);
+    }
+  };
+
   // Show loading while checking auth
   if (authLoading) {
     return (
@@ -426,6 +555,12 @@ function App() {
         onEditMessage={handleEditMessage}
         hasMessages={messages.length > 0}
         newMessageId={newMessageId}
+        reactions={reactions}
+        reviews={reviews}
+        onReaction={handleReaction}
+        onAddReview={handleAddReview}
+        onDeleteReview={handleDeleteReview}
+        user={user}
       />
     </div>
   );

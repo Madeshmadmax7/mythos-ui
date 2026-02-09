@@ -5,7 +5,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   return (
-    <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-transparent">
+    <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-1.5 bg-transparent">
       <div className="flex items-center gap-2">
         <img src={mythos} alt="Mythos" className="w-32 h-32" />
       </div>

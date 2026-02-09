@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Minus } from "lucide-react";
-import warriorImg from "../../image/goat.png";
+import warriorImg from "../../image/crocrock.png";
 
 export default function FAQSection() {
     const [openIndex, setOpenIndex] = useState(0);
