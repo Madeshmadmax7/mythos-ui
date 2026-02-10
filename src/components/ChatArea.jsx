@@ -10,6 +10,8 @@ import {
     ThumbsUp,
     ThumbsDown,
     MessageSquare,
+    Share2,
+    MoreVertical,
 } from "lucide-react";
 import crocLogo from "../image/croclogo.png";
 
@@ -347,6 +349,7 @@ export default function ChatArea({
     onReaction,
     onAddReview,
     user,
+    selectedStory, // Added missing prop
 
 }) {
     const scrollRef = useRef(null);
@@ -373,6 +376,21 @@ export default function ChatArea({
 
     return (
         <div className="flex flex-col flex-1 bg-black h-full">
+            {/* Top Bar */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#222] bg-black">
+                <div className="font-semibold text-white">
+                    {selectedStory?.story_name || "New Story"}
+                </div>
+                <div className="flex items-center gap-2">
+                    <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#1a1a1a]">
+                        <Share2 size={20} />
+                    </button>
+                    <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#1a1a1a]">
+                        <MoreVertical size={20} />
+                    </button>
+                </div>
+            </div>
+
             <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                 {error && (
                     <div className="max-w-3xl mx-auto px-6 py-4">
@@ -480,6 +498,9 @@ export default function ChatArea({
                                 <Send size={20} />
                             )}
                         </button>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500 pl-2">
+                        Genre: <span className="text-gray-400 capitalize">{genre || "None"}</span>
                     </div>
                 </div>
             </div>

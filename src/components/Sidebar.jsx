@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Plus, MessageSquare, LogOut } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
 export default function Sidebar({
     stories,
@@ -13,7 +13,9 @@ export default function Sidebar({
 }) {
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState("");
+    const [menuOpenId, setMenuOpenId] = useState(null);
     const inputRef = useRef(null);
+    const menuRef = useRef(null);
 
     useEffect(() => {
         if (editingId && inputRef.current) {
@@ -22,10 +24,30 @@ export default function Sidebar({
         }
     }, [editingId]);
 
-    const handleDoubleClick = (story, e) => {
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
+                setMenuOpenId(null);
+            }
+        };
+        if (menuOpenId !== null) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [menuOpenId]);
+
+    const handleRenameClick = (story, e) => {
         e.stopPropagation();
+        setMenuOpenId(null);
         setEditingId(story.id);
         setEditName(story.story_name || `Story ${story.id}`);
+    };
+
+    const handleDeleteClick = (storyId, e) => {
+        e.stopPropagation();
+        setMenuOpenId(null);
+        onDeleteStory(storyId);
     };
 
     const handleSave = () => {
@@ -42,6 +64,11 @@ export default function Sidebar({
     const handleKeyDown = (e) => {
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") handleCancel();
+    };
+
+    const toggleMenu = (storyId, e) => {
+        e.stopPropagation();
+        setMenuOpenId(menuOpenId === storyId ? null : storyId);
     };
 
     return (
@@ -90,7 +117,7 @@ export default function Sidebar({
                                     editingId !== story.id && onSelectStory(story)
                                 }
                                 className={`
-                                    flex items-center gap-[12px]
+                                    group relative flex items-center gap-[12px]
                                     p-[12px] rounded-[8px]
                                     transition duration-200
                                     ${selectedStoryId === story.id
@@ -126,13 +153,9 @@ export default function Sidebar({
                                     ) : (
                                         <>
                                             <p
-                                                onDoubleClick={(e) =>
-                                                    handleDoubleClick(story, e)
-                                                }
                                                 className="
                                                     text-[14px] text-[#e0e0e0]
                                                     whitespace-nowrap overflow-hidden text-ellipsis
-                                                    cursor-text
                                                 "
                                             >
                                                 {story.story_name || `Story ${story.id}`}
@@ -147,6 +170,60 @@ export default function Sidebar({
                                         </>
                                     )}
                                 </div>
+
+                                {/* Three-dot menu button */}
+                                {editingId !== story.id && (
+                                    <button
+                                        onClick={(e) => toggleMenu(story.id, e)}
+                                        className={`
+                                            shrink-0 p-1 rounded-md transition
+                                            ${menuOpenId === story.id
+                                                ? "opacity-100 bg-[#333]"
+                                                : "opacity-0 group-hover:opacity-100 hover:bg-[#333]"
+                                            }
+                                        `}
+                                    >
+                                        <MoreHorizontal size={16} className="text-[#999]" />
+                                    </button>
+                                )}
+
+                                {/* Dropdown menu */}
+                                {menuOpenId === story.id && (
+                                    <div
+                                        ref={menuRef}
+                                        className="
+                                            absolute right-[8px] top-[44px] z-50
+                                            w-[140px] py-[4px]
+                                            bg-[#1a1a1a] border border-[#333]
+                                            rounded-[8px] shadow-lg shadow-black/50
+                                        "
+                                    >
+                                        <button
+                                            onClick={(e) => handleRenameClick(story, e)}
+                                            className="
+                                                w-full flex items-center gap-[8px]
+                                                px-[12px] py-[8px]
+                                                text-[13px] text-[#e0e0e0]
+                                                hover:bg-[#333] transition
+                                            "
+                                        >
+                                            <Pencil size={14} className="text-[#999]" />
+                                            Rename
+                                        </button>
+                                        <button
+                                            onClick={(e) => handleDeleteClick(story.id, e)}
+                                            className="
+                                                w-full flex items-center gap-[8px]
+                                                px-[12px] py-[8px]
+                                                text-[13px] text-red-400
+                                                hover:bg-[#333] transition
+                                            "
+                                        >
+                                            <Trash2 size={14} />
+                                            Delete
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation, useParams, matchPath } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import ChatArea from "./components/ChatArea";
 import Login from "./components/Login";
@@ -41,6 +41,15 @@ function App() {
   // Reactions and reviews state
   const [reactions, setReactions] = useState({}); // { [messageId]: { type, likes, dislikes } }
   const [reviews, setReviews] = useState({}); // { [messageId]: [reviews] }
+
+  // Router hooks (must be called before any conditional returns)
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isAppRoute = location.pathname === '/app' || location.pathname.startsWith('/app/m/');
+
+  // Handle routing based on URL hash
+  const match = matchPath("/app/m/:hashId", location.pathname);
+  const hashId = match ? match.params.hashId : null;
 
   // Check for existing token on mount
   useEffect(() => {
@@ -93,29 +102,62 @@ function App() {
   useEffect(() => {
     if (user && token) {
       fetchStories();
-      // Restore selected story from localStorage
-      const savedStoryId = localStorage.getItem("selectedStoryId");
-      if (savedStoryId) {
-        setSelectedStoryId(parseInt(savedStoryId));
-      }
     }
   }, [user, token]);
 
-  // When switching story - also save to localStorage
+  // Sync selected story with URL hash
   useEffect(() => {
-    if (selectedStoryId) {
-      localStorage.setItem("selectedStoryId", selectedStoryId.toString());
-      fetchMessages(selectedStoryId);
-      const story = stories.find((s) => s.id === selectedStoryId);
-      setSelectedStory(story);
-      // Clear newMessageId when switching stories (no typing animation for loaded messages)
-      setNewMessageId(null);
-    } else {
-      localStorage.removeItem("selectedStoryId");
-      setMessages([]);
-      setSelectedStory(null);
+    if (user && token) {
+      if (hashId && stories.length > 0) {
+        const story = stories.find(s => s.hash_id === hashId);
+        if (story) {
+          if (selectedStoryId !== story.id) {
+            setSelectedStoryId(story.id);
+            setSelectedStory(story);
+            fetchMessages(story.id);
+            setNewMessageId(null); // Reset typing animation state
+          }
+        } else {
+          fetchStoryByHash(hashId);
+        }
+      } else if (!hashId && selectedStoryId && isAppRoute && !location.pathname.startsWith('/app/m/')) {
+        // Deselect if on /app root
+        setSelectedStoryId(null);
+        setSelectedStory(null);
+        setMessages([]);
+      }
     }
-  }, [selectedStoryId, stories]);
+  }, [hashId, stories, user, token, location.pathname]);
+
+  const fetchStoryByHash = async (hashId) => {
+    try {
+      const res = await fetch(`${API_BASE}/stories/hash/${hashId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const story = await res.json();
+        setStories(prev => {
+          if (!prev.find(s => s.id === story.id)) return [story, ...prev];
+          return prev;
+        });
+        setSelectedStoryId(story.id);
+        setSelectedStory(story);
+        fetchMessages(story.id);
+        setNewMessageId(null); // Reset typing animation state
+      } else {
+        navigate('/app');
+      }
+    } catch (e) {
+      console.error("Error fetching story by hash", e);
+      navigate('/app');
+    }
+  }
+
+
+
+  // Effect to sync localStorage removed - URL is source of truth
+  // We keep fetchMessages logic inside the routing effect or handler
+
 
   const fetchStories = async () => {
     try {
@@ -157,6 +199,7 @@ function App() {
   };
 
   const handleNewStory = () => {
+    navigate('/app');
     setSelectedStoryId(null);
     setSelectedStory(null);
     setMessages([]);
@@ -165,7 +208,7 @@ function App() {
   };
 
   const handleSelectStory = (story) => {
-    setSelectedStoryId(story.id);
+    navigate(`/app/m/${story.hash_id}`);
     setError("");
   };
 
@@ -180,8 +223,7 @@ function App() {
 
       if (res.ok) {
         if (selectedStoryId === storyId) {
-          setSelectedStoryId(null);
-          setMessages([]);
+          navigate('/app');
         }
         fetchStories();
       } else if (res.status === 401) {
@@ -244,7 +286,8 @@ function App() {
         const newStory = await createRes.json();
         storyId = newStory.id;
 
-        setSelectedStoryId(storyId);
+        // Navigate to new story URL
+        navigate(`/app/m/${newStory.hash_id}`);
         await fetchStories();
       }
 
@@ -577,9 +620,6 @@ function App() {
     return <Login onLoginSuccess={onSuccess} />;
   };
 
-  const location = useLocation();
-  const isAppRoute = location.pathname === '/app';
-
   return (
     <>
       <ScrollToTop />
@@ -600,6 +640,10 @@ function App() {
         {/* Protected route */}
         <Route
           path="/app"
+          element={user && token ? authenticatedAppContent : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/app/m/:hashId"
           element={user && token ? authenticatedAppContent : <Navigate to="/login" replace />}
         />
 
