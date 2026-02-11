@@ -171,8 +171,8 @@ export default function Sidebar({
                                     )}
                                 </div>
 
-                                {/* Three-dot menu button */}
-                                {editingId !== story.id && (
+                                {/* Three-dot menu button (Owner Only) */}
+                                {editingId !== story.id && story.access_level === 'owner' && (
                                     <button
                                         onClick={(e) => toggleMenu(story.id, e)}
                                         className={`

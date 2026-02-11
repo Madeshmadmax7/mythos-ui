@@ -14,6 +14,8 @@ import {
     MoreVertical,
 } from "lucide-react";
 import crocLogo from "../image/croclogo.png";
+import ShareModal from "./ShareModal";
+import ManagementModal from "./ManagementModal";
 
 function MessageBlock({
     message,
@@ -25,6 +27,7 @@ function MessageBlock({
     onReaction,
     onAddReview,
     user,
+    selectedStory,
 }) {
     const [showRefine, setShowRefine] = useState(false);
     const [refinePrompt, setRefinePrompt] = useState("");
@@ -154,7 +157,7 @@ function MessageBlock({
                                             ) : (
                                                 <Save size={14} />
                                             )}
-                                            Save
+                                            {selectedStory?.user_id === user?.id ? "Save" : "Propose"}
                                         </button>
                                     </div>
                                 </div>
@@ -169,14 +172,14 @@ function MessageBlock({
                                         )}
                                     </p>
 
-                                    {!isTyping && (
+                                    {(selectedStory?.user_id === user?.id || selectedStory?.access_level === 'collaborate') && !isTyping && (
                                         <div className="flex items-center gap-4 mt-3 pt-2 border-t border-[#333]">
                                             <button
                                                 onClick={handleEdit}
                                                 className="px-2 py-1 text-[11px] text-gray-400 hover:text-gray-300 flex items-center gap-1"
                                             >
                                                 <Pencil size={12} />
-                                                Edit
+                                                {selectedStory?.user_id === user?.id ? "Edit" : "Propose Edit"}
                                             </button>
 
                                             <div className="flex items-center gap-3 ml-auto">
@@ -280,7 +283,7 @@ function MessageBlock({
                     </div>
                 </div>
 
-                {!isRefining && !isEditing && (
+                {(selectedStory?.user_id === user?.id || selectedStory?.access_level === 'collaborate') && !isRefining && !isEditing && (
                     <div className="max-w-3xl mx-auto px-6 mt-3 flex flex-wrap gap-2">
                         {!showRefine ? (
                             <button
@@ -288,7 +291,7 @@ function MessageBlock({
                                 className="px-4 py-2 bg-[#1a1a1a] border border-[#333] rounded-lg text-gray-300 text-sm flex items-center gap-2"
                             >
                                 <Edit3 size={14} />
-                                Refine
+                                {selectedStory?.user_id === user?.id ? "Refine" : "Propose Refinement"}
                             </button>
                         ) : (
                             <div className="flex gap-2 w-full">
@@ -308,7 +311,7 @@ function MessageBlock({
                                     disabled={!refinePrompt.trim()}
                                     className="px-4 py-3 bg-[#333] text-white rounded-lg"
                                 >
-                                    Refine
+                                    {selectedStory?.user_id === user?.id ? "Refine" : "Propose"}
                                 </button>
 
                                 <button
@@ -350,7 +353,7 @@ export default function ChatArea({
     onAddReview,
     user,
     selectedStory, // Added missing prop
-
+    onRefresh,
 }) {
     const scrollRef = useRef(null);
 
@@ -362,6 +365,9 @@ export default function ChatArea({
         { id: "mystery", name: "Mystery" },
         { id: "adventure", name: "Adventure" },
     ];
+
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [showManagementModal, setShowManagementModal] = useState(false);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -382,12 +388,56 @@ export default function ChatArea({
                     {selectedStory?.story_name || "New Story"}
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#1a1a1a]">
-                        <Share2 size={20} />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#1a1a1a]">
-                        <MoreVertical size={20} />
-                    </button>
+                    {/* Share and Refresh visible for all with access */}
+                    {(user?.id === selectedStory?.user_id || selectedStory?.access_level === 'collaborate' || selectedStory?.access_level === 'view' || !selectedStory) && (
+                        <>
+                            <button
+                                onClick={async () => {
+                                    const btn = document.getElementById('navbar-refresh-btn');
+                                    if (btn) btn.classList.add('animate-spin');
+                                    await onRefresh();
+                                    if (btn) btn.classList.remove('animate-spin');
+                                }}
+                                id="navbar-refresh-btn"
+                                className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#1a1a1a] transition-all"
+                                title="Refresh Messages"
+                            >
+                                <RefreshCw size={20} />
+                            </button>
+                            <button
+                                onClick={() => setShowShareModal(true)}
+                                className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#1a1a1a]"
+                            >
+                                <Share2 size={20} />
+                            </button>
+                        </>
+                    )}
+
+                    {/* Show management menu for owner and collaborators */}
+                    {(user?.id === selectedStory?.user_id || selectedStory?.access_level === 'collaborate') && (
+                        <button
+                            onClick={() => setShowManagementModal(true)}
+                            className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#1a1a1a]"
+                        >
+                            <MoreVertical size={20} />
+                        </button>
+                    )}
+
+                    <ShareModal
+                        isOpen={showShareModal}
+                        onClose={() => setShowShareModal(false)}
+                        storyHash={selectedStory?.hash_id}
+                        isOwner={user?.id === selectedStory?.user_id}
+                    />
+
+                    <ManagementModal
+                        isOpen={showManagementModal}
+                        onClose={() => setShowManagementModal(false)}
+                        storyHash={selectedStory?.hash_id}
+                        token={localStorage.getItem("token")}
+                        isOwner={user?.id === selectedStory?.user_id}
+                        currentUser={user}
+                    />
                 </div>
             </div>
 
@@ -418,11 +468,16 @@ export default function ChatArea({
                                 {genres.map((g) => (
                                     <button
                                         key={g.id}
-                                        onClick={() => setGenre(g.id)}
-                                        className={`px-4 py-2 text-sm rounded-full ${genre === g.id
+                                        onClick={() => {
+                                            if (!selectedStory || selectedStory.user_id === user?.id || selectedStory.access_level === 'collaborate') {
+                                                setGenre(g.id);
+                                            }
+                                        }}
+                                        disabled={selectedStory && selectedStory.user_id !== user?.id && selectedStory.access_level !== 'collaborate'}
+                                        className={`px-4 py-2 text-sm rounded-full transition-all ${genre === g.id
                                             ? "bg-white text-black"
                                             : "bg-[#1a1a1a] text-gray-300"
-                                            }`}
+                                            } ${(selectedStory && selectedStory.user_id !== user?.id && selectedStory.access_level !== 'collaborate') ? 'opacity-30 cursor-not-allowed' : 'hover:bg-[#222]'}`}
                                     >
                                         {g.name}
                                     </button>
@@ -446,6 +501,7 @@ export default function ChatArea({
                                 onReaction={onReaction}
                                 onAddReview={onAddReview}
                                 user={user}
+                                selectedStory={selectedStory}
                             />
                         ))}
 
@@ -479,17 +535,20 @@ export default function ChatArea({
                                 )
                                     handleSubmit();
                             }}
+                            disabled={selectedStory && selectedStory.user_id !== user?.id && selectedStory.access_level !== 'collaborate'}
                             placeholder={
-                                hasMessages
-                                    ? "What happens next?"
-                                    : "Describe your story idea..."
+                                (selectedStory && selectedStory.user_id !== user?.id && selectedStory.access_level !== 'collaborate')
+                                    ? "Read-only access"
+                                    : hasMessages
+                                        ? "What happens next?"
+                                        : "Describe your story idea..."
                             }
-                            className="flex-1 px-5 py-4 bg-[#1a1a1a] border border-[#333] rounded-xl text-white"
+                            className={`flex-1 px-5 py-4 bg-[#1a1a1a] border border-[#333] rounded-xl text-white ${(selectedStory && selectedStory.user_id !== user?.id && selectedStory.access_level !== 'collaborate') ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
 
                         <button
                             onClick={handleSubmit}
-                            disabled={loading || !inputText.trim()}
+                            disabled={loading || !inputText.trim() || (selectedStory && selectedStory.user_id !== user?.id && selectedStory.access_level !== 'collaborate')}
                             className="px-6 py-4 rounded-xl bg-white text-black disabled:opacity-50"
                         >
                             {loading ? (

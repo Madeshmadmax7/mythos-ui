@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams, matchPath } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import ChatArea from "./components/ChatArea";
+import AccessRequestModal from "./components/AccessRequestModal";
 import Login from "./components/Login";
 import HomePage from "./pages/HomePage";
 import DocsPage from "./pages/DocsPage";
@@ -37,6 +38,11 @@ function App() {
   const [refiningId, setRefiningId] = useState(null);
   const [error, setError] = useState("");
   const [newMessageId, setNewMessageId] = useState(null); // Track newly generated message for typing animation
+
+  // Access Request Modal State
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [accessStoryHash, setAccessStoryHash] = useState(null);
+  const [isAccessPending, setIsAccessPending] = useState(false);
 
   // Reactions and reviews state
   const [reactions, setReactions] = useState({}); // { [messageId]: { type, likes, dislikes } }
@@ -108,7 +114,7 @@ function App() {
   // Sync selected story with URL hash
   useEffect(() => {
     if (user && token) {
-      if (hashId && stories.length > 0) {
+      if (hashId) {
         const story = stories.find(s => s.hash_id === hashId);
         if (story) {
           if (selectedStoryId !== story.id) {
@@ -136,6 +142,12 @@ function App() {
       });
       if (res.ok) {
         const story = await res.json();
+        if (story.access_level === 'pending') {
+          setAccessStoryHash(hashId);
+          setIsAccessPending(true);
+          setShowAccessModal(true);
+          return;
+        }
         setStories(prev => {
           if (!prev.find(s => s.id === story.id)) return [story, ...prev];
           return prev;
@@ -144,6 +156,12 @@ function App() {
         setSelectedStory(story);
         fetchMessages(story.id);
         setNewMessageId(null); // Reset typing animation state
+        setIsAccessPending(false);
+        setShowAccessModal(false);
+      } else if (res.status === 403) {
+        // Show access request modal
+        setAccessStoryHash(hashId);
+        setShowAccessModal(true);
       } else {
         navigate('/app');
       }
@@ -309,6 +327,15 @@ function App() {
 
       const result = await generateRes.json();
 
+      if (result.request_id) {
+        // It's a proposal
+        setInputText("");
+        setNewMessageId(null);
+        // We could add a temporary message or just a toast
+        alert("Proposal sent to owner for approval!");
+        return;
+      }
+
       const newMessage = {
         id: result.message_id,
         user_prompt: inputText,
@@ -351,6 +378,14 @@ function App() {
 
       const result = await res.json();
 
+      if (result.request_id) {
+        // It's a proposal
+        setInputText("");
+        setNewMessageId(null);
+        alert("Proposal sent to owner for approval!");
+        return;
+      }
+
       const newMessage = {
         id: result.message_id,
         user_prompt: inputText,
@@ -392,6 +427,11 @@ function App() {
 
       const result = await res.json();
 
+      if (result.request_id) {
+        alert("Refinement proposal sent to owner for approval!");
+        return;
+      }
+
       setMessages((prev) =>
         prev.map((m) =>
           m.id === messageId
@@ -426,6 +466,11 @@ function App() {
       if (!res.ok) throw new Error("Failed to update message");
 
       const result = await res.json();
+
+      if (result.request_id) {
+        alert("Edit proposal sent to owner for approval!");
+        return;
+      }
 
       setMessages((prev) =>
         prev.map((m) =>
@@ -604,6 +649,14 @@ function App() {
         onAddReview={handleAddReview}
         onDeleteReview={handleDeleteReview}
         user={user}
+        onRefresh={() => fetchMessages(selectedStoryId)}
+      />
+      <AccessRequestModal
+        isOpen={showAccessModal}
+        storyHash={accessStoryHash}
+        token={token}
+        isPending={isAccessPending}
+        onRequestAccess={() => { }}
       />
     </div>
   );
