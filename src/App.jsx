@@ -12,6 +12,7 @@ import "./App.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import { CheckCircle, XCircle, Info, X } from "lucide-react";
 
 const API_BASE = "http://localhost:8000/api";
 
@@ -47,6 +48,17 @@ function App() {
   // Reactions and reviews state
   const [reactions, setReactions] = useState({}); // { [messageId]: { type, likes, dislikes } }
   const [reviews, setReviews] = useState({}); // { [messageId]: [reviews] }
+
+  // Toast notifications
+  const [toasts, setToasts] = useState([]);
+
+  const showToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5000);
+  };
 
   // Router hooks (must be called before any conditional returns)
   const location = useLocation();
@@ -332,7 +344,7 @@ function App() {
         setInputText("");
         setNewMessageId(null);
         // We could add a temporary message or just a toast
-        alert("Proposal sent to owner for approval!");
+        showToast("Proposal sent to owner for approval!");
         return;
       }
 
@@ -382,7 +394,7 @@ function App() {
         // It's a proposal
         setInputText("");
         setNewMessageId(null);
-        alert("Proposal sent to owner for approval!");
+        showToast("Proposal sent to owner for approval!");
         return;
       }
 
@@ -428,7 +440,7 @@ function App() {
       const result = await res.json();
 
       if (result.request_id) {
-        alert("Refinement proposal sent to owner for approval!");
+        showToast("Refinement proposal sent to owner for approval!");
         return;
       }
 
@@ -468,7 +480,7 @@ function App() {
       const result = await res.json();
 
       if (result.request_id) {
-        alert("Edit proposal sent to owner for approval!");
+        showToast("Edit proposal sent to owner for approval!");
         return;
       }
 
@@ -704,6 +716,29 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {!isAppRoute && <Footer />}
+
+      {/* Toast Notifications */}
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 items-center pointer-events-none">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className="pointer-events-auto flex items-center gap-3 px-4 py-3 bg-[#1a1a1a] border border-blue-500/20 rounded-xl shadow-2xl shadow-black/50 animate-in fade-in slide-in-from-top-4 duration-300 min-w-[300px]"
+          >
+            <div className="flex-shrink-0">
+              {toast.type === 'success' && <CheckCircle size={18} className="text-blue-500" />}
+              {toast.type === 'error' && <XCircle size={18} className="text-red-500" />}
+              {toast.type === 'info' && <Info size={18} className="text-blue-400" />}
+            </div>
+            <p className="text-sm font-medium text-gray-200">{toast.message}</p>
+            <button
+              onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+              className="ml-auto text-gray-500 hover:text-white transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
     </>
   );
 }
